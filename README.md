@@ -2,6 +2,8 @@
 
 Displays prices of coins on i3bar (default status bar on [i3 window manager](https://i3wm.org)) if you are using i3status (default).
 
+![Screenshot](https://i.imgur.com/SIlrW27.png "Screenshot")
+
 # Installation
 
 1. Clone this repository (for example in `/opt/i3status-bittrex-ticker`)
