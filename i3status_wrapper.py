@@ -45,16 +45,19 @@ def get_config(section, option, default=None):
 class Ticker(object):
     def __init__(self):
         self.prices = {}
-        market_pair = 'USDT-BTC'
-        url = 'https://bittrex.com/api/v1.1/public/getticker?market={}'.format(market_pair)
-        try:
-            btc_ticker = json.loads(urllib2.urlopen(url, timeout=TIMEOUT).read(), parse_float=decimal.Decimal)
-            self.btc_price = btc_ticker['result']['Last']
-        except:
-            self.btc_price = 0
-        self.prices['USDT-BTC'] = self.btc_price
 
-    def get_price(self, market_pair):
+    @property
+    def btc_price(self):
+        market_pair = 'USDT-BTC'
+        return self.get_price(market_pair)
+
+    @property
+    def eth_price(self):
+        market_pair = 'USDT-ETH'
+        return self.get_price(market_pair)
+
+
+    def get_price(self, market_pair, dollars=False):
         if market_pair not in self.prices:
             try:
                 ticker = json.loads(
@@ -66,19 +69,23 @@ class Ticker(object):
             except Exception as e:
                 price = 0
             self.prices[market_pair] = price
-        
-        return self.prices[market_pair]
+        price = self.prices[market_pair]
+        if dollars:
+            market, _ = market_pair.split('-')
+            if market == 'BTC':
+                price *= self.btc_price
+            elif market == 'ETH':
+                price *= self.eth_price
 
+        return price
 
     def get_line(self, market_pair):
-        price = self.get_price(market_pair)
         market, coin = market_pair.split('-')
         dollars = ''
-        if market == 'USDT':
+        if market == 'USDT' or get_config_boolean(market_pair, 'display_dollars', False):
             dollars = '$'
-        elif get_config_boolean(market_pair, 'display_dollars', False):
-            dollars = '$'
-            price = price * self.btc_price
+        price = self.get_price(market_pair, dollars=dollars)
+
         line = {'name' : 'cointicker', 'instance': market_pair+str(price)}
         color = COLOR_WHITE
         decimal_points = get_config_int(market_pair, 'decimal_points')
